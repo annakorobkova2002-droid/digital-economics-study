@@ -53,6 +53,7 @@ main{max-width:1140px;margin:auto;padding:clamp(20px,3vw,40px) max(3vw,14px) 60p
 .bar .tr{height:10px;background:var(--line);border-radius:6px;overflow:hidden}
 .bar .tr i{display:block;height:100%;background:var(--acc);border-radius:6px}
 .bar .pc{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.ln{display:inline-block;min-width:30px;margin-right:6px;font:800 18px/1 "Sofia Sans Condensed",sans-serif;color:var(--acc);font-variant-numeric:tabular-nums}
 .tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--card);color:var(--mut);margin-left:6px;white-space:nowrap}
 .panel{border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:18px 0}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
@@ -132,6 +133,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
 const LET = 'ABCD';
+const lname = id => 'Chapter ' + TOP[id].n + ' · ' + TOP[id].title;
 
 let B = null, TOP = {}, Q = [], QI = {}, C = [];
 let S = {v: 1, ts: 0, q: {}, k: {}, a: {}, m: []};
@@ -249,7 +251,7 @@ function home() {
     <div>
       <h2>Mastery by topic</h2>
       <p class="sm mut">Share of each topic's questions you answered correctly on your last try. Tap a topic to study it.</p>
-      <div class="bars">${B.topics.map(t => { const m = mastery(t.id); return `<a class="bar" href="#learn-${t.id}"><span>${esc(t.title)}${t.part === 'Guest' ? '<span class="tag">guest</span>' : ''}</span><span class="tr"><i style="width:${m.p}%"></i></span><span class="pc">${m.p}%</span></a>`; }).join('')}</div>
+      <div class="bars">${B.topics.map(t => { const m = mastery(t.id); return `<a class="bar" href="#learn-${t.id}"><span><span class="ln">${t.n}</span>${esc(t.title)}${t.part === 'Guest' ? '<span class="tag">guest</span>' : ''}</span><span class="tr"><i style="width:${m.p}%"></i></span><span class="pc">${m.p}%</span></a>`; }).join('')}</div>
     </div>
     <div class="fmt" style="align-self:start">
       <h3>How the exam works</h3>
@@ -269,14 +271,14 @@ function home() {
 function learn(id) {
   const t = TOP[id];
   if (!t) {
-    $app.innerHTML = `<h1>Learn</h1><p class="mut">Key points and flashcards for each lecture, in course order.</p>
-    <div class="grid2">${B.topics.map(t => { const m = mastery(t.id); return `<a class="tile" href="#learn-${t.id}"><h3>${esc(t.title)}</h3><div class="sm mut">${t.part === 'Guest' ? 'Guest lecture' : 'Part ' + esc(t.part)} · ${esc(t.date)} · ${t.mcq.length + t.tf.length} questions · ${m.p}% mastered</div></a>`; }).join('')}</div>`;
+    $app.innerHTML = `<h1>Learn</h1><p class="mut">Key points and definitions for each lecture, numbered as chapters in the order of your study handbook.</p>
+    <div class="grid2">${B.topics.map(t => { const m = mastery(t.id); return `<a class="tile" href="#learn-${t.id}"><h3><span class="ln" style="font-size:24px;min-width:34px">${t.n}</span>${esc(t.title)}</h3><div class="sm mut">Chapter ${t.n} · ${t.part === 'Guest' ? 'Guest lecture' : 'Part ' + esc(t.part)} · ${esc(t.date)} · ${t.mcq.length + t.tf.length} questions · ${m.p}% mastered</div></a>`; }).join('')}</div>`;
     return;
   }
   const cs = C.filter(c => c.t === id); const m = mastery(id);
   $app.innerHTML = `<p class="sm"><a href="#learn">← All topics</a></p>
-  <h1>${esc(t.title)}</h1>
-  <p class="mut">${t.part === 'Guest' ? 'Guest lecture' : 'Part ' + esc(t.part)} · ${esc(t.date)} · ${m.p}% mastered</p>
+  <h1><span class="ln" style="font-size:inherit;min-width:0;margin-right:.25em">${t.n}</span>${esc(t.title)}</h1>
+  <p class="mut">Chapter ${t.n} · Handbook ch. ${esc(t.hb)} · ${t.part === 'Guest' ? 'Guest lecture' : 'Part ' + esc(t.part)} · ${esc(t.date)} · ${m.p}% mastered</p>
   <div class="row" style="margin:16px 0 8px"><button class="btn p" data-act="quizTopic" data-arg="${id}">Quiz this topic</button><button class="btn" data-act="cardsTopic" data-arg="${id}">Flashcards for this topic</button></div>
   <div class="panel"><h2>Key points</h2><ul class="kp">${t.summary.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>
   <div class="panel"><h2>Terms &amp; definitions</h2><table class="cards">${cs.map(c => `<tr><td>${esc(c.f)}</td><td>${esc(c.b)}</td></tr>`).join('')}</table></div>`;
@@ -285,7 +287,7 @@ function learn(id) {
 /* ---------- topic picker ---------- */
 let pick = new Set();
 function picker() {
-  return `<div class="chips"><button class="chip ${pick.size === 0 ? 'on' : ''}" data-act="pickAll">All topics</button>${B.topics.map(t => `<button class="chip ${pick.has(t.id) ? 'on' : ''}" data-act="pick" data-arg="${t.id}">${esc(t.title)}</button>`).join('')}</div>`;
+  return `<div class="chips"><button class="chip ${pick.size === 0 ? 'on' : ''}" data-act="pickAll">All topics</button>${B.topics.map(t => `<button class="chip ${pick.has(t.id) ? 'on' : ''}" data-act="pick" data-arg="${t.id}">${t.n}. ${esc(t.title)}</button>`).join('')}</div>`;
 }
 const picked = () => pick.size ? [...pick] : B.topics.map(t => t.id);
 
@@ -304,7 +306,7 @@ function cards() {
   }
   const c = s.deck[0];
   $app.innerHTML = `<div class="fcwrap">
-    <div class="q"><div class="meta"><span>${esc(TOP[c.t].title)}</span><span>${s.deck.length} left</span></div></div>
+    <div class="q"><div class="meta"><span>${esc(lname(c.t))}</span><span>${s.deck.length} left</span></div></div>
     <div class="fc" id="fc" tabindex="0" role="button" aria-label="Flip card"><div class="in">
       <div class="f"><small>Question</small>${esc(c.f)}</div>
       <div class="b"><small>Answer</small>${esc(c.b)}</div></div></div>
@@ -355,7 +357,7 @@ function quiz() {
   }
   const x = s.list[s.i], q = x.q, done = x.a !== null;
   $app.innerHTML = `<div class="q">
-    <div class="meta"><span>${esc(TOP[q.t].title)}</span><span>${s.i + 1} / ${s.list.length}</span></div>
+    <div class="meta"><span>${esc(lname(q.t))}</span><span>${s.i + 1} / ${s.list.length}</span></div>
     <div class="prog"><i style="width:${pct(s.i, s.list.length)}%"></i></div>
     <p class="stem">${q.type === 'tf' ? '<span class="tag" style="margin:0 8px 0 0">True or false</span>' : ''}${esc(q.q)}</p>
     ${x.o.map((o, i) => { let cl = ''; if (done) { if (o === q.c) cl = 'ok'; else if (o === x.a) cl = 'no'; } return `<button class="opt ${cl}" data-act="answer" data-arg="${i}" ${done ? 'disabled' : ''}><span class="k">${LET[i]}</span><span>${esc(o)}</span></button>`; }).join('')}
@@ -363,7 +365,7 @@ function quiz() {
     <p class="sm" style="margin-top:20px"><a href="#quiz" data-act="endQuiz">End quiz</a></p></div>`;
 }
 function reviewItem(q, a) {
-  return `<div class="panel"><div class="sm mut">${esc(TOP[q.t].title)}</div><p style="font-weight:600;margin:.3em 0 .6em">${esc(q.q)}</p>
+  return `<div class="panel"><div class="sm mut">${esc(lname(q.t))}</div><p style="font-weight:600;margin:.3em 0 .6em">${esc(q.q)}</p>
   ${a != null ? `<p class="sm" style="margin:0"><span style="color:var(--bad)">Your answer:</span> ${esc(a)}</p>` : ''}
   <p class="sm" style="margin:.2em 0"><span style="color:var(--ok)">Correct:</span> ${esc(q.c)}</p><p class="sm mut" style="margin:.4em 0 0">${esc(q.e)}</p></div>`;
 }
@@ -387,7 +389,7 @@ function mock() {
     const by = {}; s.list.forEach(x => { by[x.q.t] = by[x.q.t] || [0, 0]; by[x.q.t][1]++; if (x.a === x.q.c) by[x.q.t][0]++; });
     $app.innerHTML = `<h1>Part A result</h1><div class="big">${ok}/${s.list.length}</div><p class="mut">${pct(ok, s.list.length)}% · time used ${fmt(1800 - s.left)}</p>
     <div class="row" style="margin:16px 0"><button class="btn p" data-act="startMockB">Continue to part B</button><button class="btn" data-act="newMock">Back to mock exams</button></div>
-    <h2>By topic</h2><div class="bars">${Object.entries(by).sort((a, b) => a[1][0] / a[1][1] - b[1][0] / b[1][1]).map(([t, v]) => `<a class="bar" href="#learn-${t}"><span>${esc(TOP[t].title)}</span><span class="tr"><i style="width:${pct(v[0], v[1])}%"></i></span><span class="pc">${v[0]}/${v[1]}</span></a>`).join('')}</div>
+    <h2>By topic</h2><div class="bars">${Object.entries(by).sort((a, b) => a[1][0] / a[1][1] - b[1][0] / b[1][1]).map(([t, v]) => `<a class="bar" href="#learn-${t}"><span><span class="ln">${TOP[t].n}</span>${esc(TOP[t].title)}</span><span class="tr"><i style="width:${pct(v[0], v[1])}%"></i></span><span class="pc">${v[0]}/${v[1]}</span></a>`).join('')}</div>
     <h2 style="margin-top:26px">Questions you missed</h2>${s.list.filter(x => x.a !== x.q.c).map(x => reviewItem(x.q, x.a ?? '(no answer)')).join('') || '<p>None — excellent.</p>'}`;
     return;
   }
@@ -422,7 +424,7 @@ function assign(id) {
   const a = B.assignments.find(x => x.id === id);
   if (!a) {
     $app.innerHTML = `<h1>Assignments</h1><p class="mut" style="max-width:64ch">Practice for the 90-minute written part: apply the course frameworks to a case. Write your answer first, then reveal the model answer and tick off the checklist to score yourself. Drafts save automatically.</p>
-    <div class="grid2" style="margin-top:16px">${B.assignments.map(a => { const r = S.a[a.id]; return `<a class="tile" href="#assign-${a.id}">${a.badge ? `<span class="badge">${esc(a.badge)}</span>` : ''}<h3>${esc(a.title)}</h3><div class="sm mut">${a.topics.map(t => esc(TOP[t].title)).join(' · ')}</div><div class="sm" style="margin-top:8px">${r && r.n ? `Last self-score: <b>${r.s}/${r.n}</b>` : r && r.d ? 'Draft started' : 'Not attempted'}</div></a>`; }).join('')}</div>`;
+    <div class="grid2" style="margin-top:16px">${B.assignments.map(a => { const r = S.a[a.id]; return `<a class="tile" href="#assign-${a.id}">${a.badge ? `<span class="badge">${esc(a.badge)}</span>` : ''}<h3>${esc(a.title)}</h3><div class="sm mut">${a.topics.map(t => esc(lname(t))).join(' · ')}</div><div class="sm" style="margin-top:8px">${r && r.n ? `Last self-score: <b>${r.s}/${r.n}</b>` : r && r.d ? 'Draft started' : 'Not attempted'}</div></a>`; }).join('')}</div>`;
     return;
   }
   const r = S.a[a.id] || {}; const shown = !!r.show;
@@ -430,7 +432,7 @@ function assign(id) {
   if (running && !timers.b && aTimer.left > 0) startATimer(a.id, aTimer.left);
   $app.innerHTML = `<p class="sm"><a href="#assign">← All assignments</a></p>
   ${a.badge ? `<span class="badge">${esc(a.badge)}</span>` : ''}<h1>${esc(a.title)}</h1>
-  <div class="row" style="justify-content:space-between;margin-bottom:6px"><span class="sm mut">Frameworks: ${a.topics.map(t => `<a href="#learn-${t}">${esc(TOP[t].title)}</a>`).join(' · ')}</span>
+  <div class="row" style="justify-content:space-between;margin-bottom:6px"><span class="sm mut">Frameworks: ${a.topics.map(t => `<a href="#learn-${t}">${esc(lname(t))}</a>`).join(' · ')}</span>
   <span class="row">${running ? `<span class="timer ${aTimer.left < 600 ? 'low' : ''}" id="atm">${fmt(aTimer.left)}</span><button class="btn s" data-act="stopATimer">Stop timer</button>` : '<button class="btn s" data-act="startATimer">Start 90-min timer</button>'}</span></div>
   <div class="panel" style="border-color:var(--ink)"><h3>Task</h3><p style="margin:0">${esc(a.prompt)}</p></div>
   <label for="draft" class="sm mut">Your answer (saved as you type)</label>

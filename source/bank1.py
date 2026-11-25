@@ -95,7 +95,7 @@ T.append({
 })
 
 T.append({
-"id": "google", "title": "Guest lecture: Google & Google Cloud", "part": "I", "date": "Guest",
+"id": "google", "title": "Guest lecture: Google & Google Cloud", "part": "Guest", "date": "Guest",
 "summary": [
  "Italian digital examples: Bending Spoons (apps, Milan), Scalapay (fintech/payments), Prima (digital insurance), YOOX (online luxury), iGenius (enterprise AI).",
  "Alphabet = core Google + AI + Cloud + Other Bets + investments (Waymo, Nest, Google X, DeepMind, GV, Anthropic investment) → portfolio diversification.",
